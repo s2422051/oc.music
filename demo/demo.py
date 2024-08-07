@@ -1,8 +1,14 @@
+import streamlit  as st
 import numpy as np
 import librosa
 import matplotlib.pyplot as plt
 from moviepy.editor import VideoClip, AudioFileClip
 from moviepy.video.io.bindings import mplfig_to_npimage
+
+# サイドバーに音声ファイルをアップロードする項目を設定し、アップロードを促す
+st.sidebar.title('menu')
+st.sidebar.write("音声ファイルをアップロードしてください")
+uploaded_file = st.sidebar.file_uploader("Choose a MP3 file", type="mp3")
 
 def analyze_audio(file_path):   #file_pathを引数に取り、y, sr, rms_normalizedを返す関数
     y, sr = librosa.load(file_path)   #file_pathの音声ファイルを読み込み、y, srに代入(yは波形データ、srはサンプリングレート)
@@ -37,13 +43,16 @@ def make_frame(t, y, sr, rms_normalized, fps):  #t, y, sr, rms_normalized, fps�
     plt.close(fig)
     return frame
 
-audio_path = 'dros.mp3'   #ここに曲ファイル
+
+audio_path = uploaded_file   #ここに曲ファイル
 y, sr, rms_normalized = analyze_audio(audio_path)
 fps = 24
 duration = len(y) / sr
 
-video = VideoClip(lambda t: make_frame(t, y, sr, rms_normalized, fps), duration=duration)
-audio = AudioFileClip(audio_path).subclip(0, duration)
-video = video.set_audio(audio)
-output_path = 'waves.mp4'
-video.write_videofile(output_path, fps=fps)
+# ボタンを押したら動画を生成する
+if st.sidebar.button('Generate'):
+    video = VideoClip(lambda t: make_frame(t, y, sr, rms_normalized, fps), duration=duration)
+    audio = AudioFileClip(audio_path).subclip(0, duration)
+    video = video.set_audio(audio)
+    output_path = 'waves.mp4'
+    video.write_videofile(output_path, fps=fps)
