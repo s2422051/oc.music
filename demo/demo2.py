@@ -12,6 +12,13 @@ st.sidebar.title('Menu')
 st.sidebar.write("楽曲をアップロードしてください")
 uploaded_file = st.sidebar.file_uploader("Choose an MP3 file", type="mp3")
 
+# サイドバーに曲名を入力する項目を設定し、入力を促す
+st.sidebar.write("曲名を入力してください")
+song_name = st.sidebar.text_input("Song Name", "")
+
+st.sidebar.write("アーティスト名を入力してください")
+artist_name = st.sidebar.text_input("Artist Name", "")
+
 def analyze_audio(file_path):
     y, sr = librosa.load(file_path, sr=None)  # sr=Noneで元のサンプリングレートを使用
     rms = librosa.feature.rms(y=y)[0]
@@ -20,14 +27,14 @@ def analyze_audio(file_path):
 
 def get_background_color(intensity):
     if intensity < 0.1:
-        return (0, 0, 255)
+        return (0, 255, 150)
     else:
         red = int(255 * (intensity - 0.1) / 0.9)
         green = int(255 * (1 - (intensity - 0.1) / 0.9))
-        return (red, green, 0)
+        return (red, green, 150)
 
 def make_frame(t, y, sr, rms_normalized, fps, duration):
-    fig, ax = plt.subplots(figsize=(10, 7))
+    fig, ax = plt.subplots(figsize=(10, 6))
     
     start = int(t * sr)
     end = int((t + 1 / fps) * sr)
@@ -54,6 +61,8 @@ if uploaded_file is not None:
     duration = len(y) / sr
     
     if st.sidebar.button('Generate'):
+        st.title(f'{song_name}')
+        st.write(f' {artist_name}')
         with st.spinner('Generating video...'):
             video = VideoClip(lambda t: make_frame(t, y, sr, rms_normalized, fps, duration), duration=duration)
             audio = AudioFileClip(audio_path).subclip(0, duration)
@@ -61,7 +70,7 @@ if uploaded_file is not None:
             output_path = 'waves.mp4'
             video.write_videofile(output_path, fps=fps, codec='libx264', audio_codec='aac')
         
-        st.success('Video generated successfully!')
+        #st.success('Video generated successfully!')
         with open(output_path, 'rb') as video_file:
             video_bytes = video_file.read()
             st.video(video_bytes)
