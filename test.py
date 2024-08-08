@@ -37,7 +37,7 @@ def make_frame(t, y, sr, rms_normalized, fps):  #t, y, sr, rms_normalized, fps�
     plt.close(fig)
     return frame
 
-audio_path = 'dros.mp3'   #ここに曲ファイル
+audio_path = ''   #ここに曲ファイル
 y, sr, rms_normalized = analyze_audio(audio_path)
 fps = 24
 duration = len(y) / sr
