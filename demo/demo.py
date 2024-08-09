@@ -111,4 +111,10 @@ if uploaded_file is not None:
         os.remove(output_path)
         os.remove(final_output_path)
 else:
-    st.sidebar.warning('音声ファイルをアップロードしてください。')
+    st.sidebar.warning('楽曲ファイルをアップロードしてください。')
+
+# 曲名とアーティスト名が入力されていない場合、警告を表示
+if song_name == "":
+    st.sidebar.warning('曲名を入力してください。')
+if artist_name == "":
+    st.sidebar.warning('アーティスト名を入力してください。')
