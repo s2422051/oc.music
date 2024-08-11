@@ -6,7 +6,6 @@ from moviepy.editor import VideoClip, AudioFileClip, TextClip, CompositeVideoCli
 from moviepy.video.io.bindings import mplfig_to_npimage
 import tempfile
 import os
-import shutil
 
 # ImageMagickのパスを設定
 os.environ["IMAGEMAGICK_BINARY"] = "/usr/local/bin/convert"  # 例。適切なパスに変更してください。
@@ -61,6 +60,7 @@ uploaded_file = st.sidebar.file_uploader("MP3ファイルを選択してくだ�
 st.sidebar.subheader("曲名を入力してください")
 song_name = st.sidebar.text_input("曲名", "")
 
+# サイドバーにアーティスト名を入力する項目を設定し、入力を促す
 st.sidebar.subheader("アーティスト名を入力してください")
 artist_name = st.sidebar.text_input("アーティスト名", "")
 
@@ -107,7 +107,12 @@ if st.session_state.song_list:
                     video = VideoClip(lambda t: make_frame(t, y, sr, rms_normalized, fps, duration), duration=duration)
                     audio = AudioFileClip(selected_song['path']).subclip(0, duration)
                     video = video.set_audio(audio).set_duration(duration)
-                    output_path = 'waves.mp4'
+
+                    # 保存先をdemoからvideoに変更
+                    save_dir = "../video"
+                    if not os.path.exists(save_dir):
+                        os.makedirs(save_dir)
+                    output_path =os.path.join(save_dir,"waves.mp4")
                     video.write_videofile(output_path, fps=fps, codec='libx264', audio_codec='aac')
 
                     text_color = 'rgb(254, 249, 245)'
@@ -117,8 +122,7 @@ if st.session_state.song_list:
                     video_height = 600  # 600pの動画を想定
                     text1_height = text_clip1.size[1]
                     text2_height = text_clip2.size[1]
-                    gap = 10  # テキストクリップ間のスペース
-
+                    gap = 7  # テキストクリップ間のスペース
                     position1 = ('center', (video_height - text1_height - text2_height - gap) // 2)
                     position2 = ('center', (video_height + text1_height + gap) // 2)
 
@@ -126,11 +130,19 @@ if st.session_state.song_list:
                     text_clip2 = text_clip2.set_position(position2).set_duration(duration)
 
                     final_video = CompositeVideoClip([video, text_clip1, text_clip2])
-                    final_output_path = f"{selected_song['name']}_final_waves.mp4"
+
+                    # ファイル名を設定
+                    final_output_path = os.path.join(save_dir, f"{selected_song['name']}_waves.mp4")
+
+                    # 最終的な動画を作成して保存
                     final_video.write_videofile(final_output_path, fps=fps, codec='libx264', audio_codec='aac')
 
                     # 動画リストに追加
-                    st.session_state.video_list.append({"name": selected_song['name'], "artist": selected_song['artist'], "path": final_output_path})
+                    st.session_state.video_list.append({
+                        "name": selected_song['name'],
+                        "artist": selected_song['artist'],
+                        "path": final_output_path
+                    })
 
                 with open(final_output_path, 'rb') as video_file:
                     video_bytes = video_file.read()
