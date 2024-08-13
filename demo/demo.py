@@ -6,6 +6,7 @@ from moviepy.editor import VideoClip, AudioFileClip, TextClip, CompositeVideoCli
 from moviepy.video.io.bindings import mplfig_to_npimage
 import tempfile
 import os
+import json
 
 # ImageMagickのパスを設定
 os.environ["IMAGEMAGICK_BINARY"] = "/usr/local/bin/convert"  # 例。適切なパスに変更してください。
@@ -108,12 +109,13 @@ if st.session_state.song_list:
                     audio = AudioFileClip(selected_song['path']).subclip(0, duration)
                     video = video.set_audio(audio).set_duration(duration)
 
-                    # 保存先をdemoからvideoに変更
+                    # 保存先ディレクトリを変更
                     save_dir = "../video"
-                    if not os.path.exists(save_dir):
-                        os.makedirs(save_dir)
-                    output_path =os.path.join(save_dir,"waves.mp4")
-                    video.write_videofile(output_path, fps=fps, codec='libx264', audio_codec='aac')
+                    #if not os.path.exists(save_dir):
+                    #    os.makedirs(save_dir)
+                    final_output_path = os.path.join(save_dir, f"{selected_song['name']}_waves.mp4")
+
+                    video.write_videofile(final_output_path, fps=fps, codec='libx264', audio_codec='aac')
 
                     text_color = 'rgb(254, 249, 245)'
                     text_clip1 = TextClip(f"{selected_song['name']}", fontsize=60, color=f'{text_color}', font="../font/Koruri-Light.ttf")
@@ -131,10 +133,8 @@ if st.session_state.song_list:
 
                     final_video = CompositeVideoClip([video, text_clip1, text_clip2])
 
-                    # ファイル名を設定
-                    final_output_path = os.path.join(save_dir, f"{selected_song['name']}_waves.mp4")
-
                     # 最終的な動画を作成して保存
+                    final_output_path = os.path.join(save_dir, f"{selected_song['name']}_waves.mp4")
                     final_video.write_videofile(final_output_path, fps=fps, codec='libx264', audio_codec='aac')
 
                     # 動画リストに追加
@@ -144,22 +144,65 @@ if st.session_state.song_list:
                         "path": final_output_path
                     })
 
+                    # JSON ファイルへのメタデータ保存コードを追加
+                    # 保存するデータを作成
+                    data = {
+                        "name": selected_song['name'],
+                        "artist": selected_song['artist'],
+                        "path": final_output_path
+                    }
+
+                    # movie.json ファイルにメタデータを保存
+                    json_file_path = '../movie.json'
+                    try:
+                        # ファイルが存在している場合のみ読み込みを試みる
+                        if os.path.exists(json_file_path) and os.path.getsize(json_file_path) > 0:
+                            with open(json_file_path, 'r', encoding='utf-8') as json_file:
+                                existing_data = json.load(json_file)
+                        else:
+                            existing_data = []
+                    except json.JSONDecodeError:
+                        # ファイルが空であるか、読み込めない場合
+                        existing_data = []
+
+                    existing_data.append(data)
+
+                    with open(json_file_path, 'w', encoding='utf-8') as json_file:
+                        json.dump(existing_data, json_file, indent=4, ensure_ascii=False)
+
                 with open(final_output_path, 'rb') as video_file:
                     video_bytes = video_file.read()
                     st.video(video_bytes)
 
-        # 選択した楽曲をリストから削除するボタン
+         # 選択した楽曲をリストから削除するボタン
         if st.sidebar.button('削除'):
             del st.session_state.song_list[selected_index]
             st.sidebar.success(f"「{selected_song['name']}」がリストから削除されました。")
             os.remove(selected_song['path'])
+            
             # 動画も削除
             if existing_video:
                 os.remove(existing_video['path'])
                 st.session_state.video_list.remove(existing_video)
+
+            # movie.json ファイルからも削除
+            json_file_path = '../movie.json'
+            try:
+                if os.path.exists(json_file_path) and os.path.getsize(json_file_path) > 0:
+                    with open(json_file_path, 'r', encoding='utf-8') as json_file:
+                        existing_data = json.load(json_file)
+
+                    # 削除する曲のデータを検索して削除
+                    updated_data = [entry for entry in existing_data if not (
+                        entry['name'] == selected_song['name'] and entry['artist'] == selected_song['artist'])]
+
+                    # JSON ファイルに上書き保存
+                    with open(json_file_path, 'w', encoding='utf-8') as json_file:
+                        json.dump(updated_data, json_file, indent=4, ensure_ascii=False)
+            except json.JSONDecodeError:
+                st.sidebar.error("JSONファイルの読み込み中にエラーが発生しました。")
 else:
     st.sidebar.warning('楽曲がリストに追加されていません。')
-
 # 曲名とアーティスト名が入力されていない場合、警告を表示
 if song_name == "":
     st.sidebar.warning('曲名を入力してください。')
