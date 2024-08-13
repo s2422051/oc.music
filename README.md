@@ -5,3 +5,6 @@
 
 ## 変更された内容を自分のブランチに持ってきたいとき
 - git merge main
+
+## インストールしなきゃいけないもの
+brew install imagemagick
