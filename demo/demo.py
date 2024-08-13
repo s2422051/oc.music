@@ -25,10 +25,7 @@ if 'video_list' not in st.session_state:
 
 # セッションステートに楽曲リストを保持する
 if 'song_list' not in st.session_state:
-    st.session_state.song_list = []
-
-if 'video_list' not in st.session_state:
-    st.session_state.video_list = []
+    st.session_state.song_list = load_video_list()
 
 # 音声を解析してRMS（Root Mean Square）を計算する関数
 def analyze_audio(file_path):
@@ -220,3 +217,4 @@ if song_name == "":
     st.sidebar.warning('曲名を入力してください。')
 if artist_name == "":
     st.sidebar.warning('アーティスト名を入力してください。')
+
