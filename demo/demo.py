@@ -11,6 +11,18 @@ import json
 # ImageMagickのパスを設定
 os.environ["IMAGEMAGICK_BINARY"] = "/usr/local/bin/convert"  # 例。適切なパスに変更してください。
 
+# movie.jsonファイルからデータを読み取る関数
+def load_video_list():
+    json_file_path = '../movie.json'
+    if os.path.exists(json_file_path):
+        with open(json_file_path, 'r', encoding='utf-8') as json_file:
+            return json.load(json_file)
+    return []
+
+# movie.jsonのデータをセッションステートに反映
+if 'video_list' not in st.session_state:
+    st.session_state.video_list = load_video_list()
+
 # セッションステートに楽曲リストを保持する
 if 'song_list' not in st.session_state:
     st.session_state.song_list = []
