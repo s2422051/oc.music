@@ -201,7 +201,6 @@ if selected_index is not None:
                 with open(json_file_path, 'w', encoding='utf-8') as json_file:
                     json.dump(existing_data, json_file, indent=4, ensure_ascii=False)
 
-            st.success('動画が正常に作成されました。')
             with open(final_output_path, 'rb') as video_file:
                 video_bytes = video_file.read()
                 st.video(video_bytes)
@@ -233,8 +232,7 @@ if st.sidebar.button('削除'):
                 json.dump(updated_data, json_file, indent=4, ensure_ascii=False)
     except json.JSONDecodeError:
         st.sidebar.error("JSONファイルの読み込み中にエラーが発生しました。")
-else:
-    st.sidebar.warning('楽曲がリストに追加されていません。')
+
 
 # 曲名とアーティスト名が入力されていない場合、警告を表示
 if song_name == "":
